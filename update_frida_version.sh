@@ -1,19 +1,93 @@
 #!/bin/sh
-test -n "$1" && { echo This script has no options. It updates the referenced Frida version in makefile to the most current one. ; exit 1 ; }
+# Updates the Frida version in Makefile to the latest release
 
-OLD=$(grep -E '^FRIDA_VERSION\s*=' Makefile 2>/dev/null | awk -F= '{print $2}' | tr -d '[:space:]')
-NEW=$(curl https://github.com/frida/frida/releases/ 2>/dev/null|grep 'Frida\ [0-9.]*'|head -n 1|sed 's/.*Frida\ //'| sed 's/<\/h2>//')
+# Exit immediately if a command exits with a non-zero status.
+set -e
 
-echo Current set version: $OLD
-echo Newest available version: $NEW
+[ -n "$1" ] && {
+    echo "This script updates the Frida version in Makefile to the latest release. It takes no arguments." >&2
+    exit 1
+}
 
-test -z "$OLD" -o -z "$NEW" -o "$OLD" = "$NEW" && { echo Nothing to be done. ; exit 0 ; }
+[ ! -f "Makefile" ] && {
+    echo "Error: Makefile not found" >&2
+    exit 1
+}
 
-# Determine the correct sed command
-case $(sed --help 2>&1) in
-  *GNU*) set sed -i;;
-  *) set sed -i '';;
-esac
+# Get current version from Makefile
+OLD_RAW_LINE=$(grep -E '^FRIDA_VERSION[[:space:]]*:?=' Makefile | head -n 1)
+[ -z "$OLD_RAW_LINE" ] && {
+    echo "Error: Could not find FRIDA_VERSION line in Makefile" >&2
+    exit 1
+}
 
-"$@" "s/=\ $OLD/=\ $NEW/" Makefile || exit 1
-echo Successfully updated Makefile
+OLD=$(echo "$OLD_RAW_LINE" | sed 's/.*:*=[[:space:]]*//' | tr -d '[:space:]')
+[ -z "$OLD" ] && {
+    echo "Error: Could not parse FRIDA_VERSION from Makefile line: $OLD_RAW_LINE" >&2
+    exit 1
+}
+
+echo "Current version: $OLD"
+
+# Get latest version from GitHub API
+NEW=$(curl -s "https://api.github.com/repos/frida/frida/releases/latest" |
+          grep '"tag_name":' |
+          sed -E 's/.*"([^"]+)".*/\1/')
+
+[ -z "$NEW" ] && {
+    echo "Error: Failed to get latest version tag from GitHub API." >&2
+    exit 1
+}
+
+# Validate the new version format
+if ! echo "$NEW" | grep -qE '^[0-9]+[.][0-9]+([.][0-9]+)?([.][0-9]+)?$'; then
+    echo "Error: Fetched version '$NEW' is not a valid version number." >&2
+    exit 1
+fi
+
+echo "Latest version: $NEW"
+
+if [ "$OLD" = "$NEW" ]; then
+    echo "Already up to date (version $OLD)."
+    exit 0
+fi
+
+OLD_ESCAPED=$(echo "$OLD" | sed 's/[.]/\\./g')
+
+# Create backup
+cp Makefile Makefile.bak
+echo "Makefile backed up to Makefile.bak"
+
+# Update version in Makefile
+PATTERN_TO_REPLACE="s/FRIDA_VERSION := $OLD_ESCAPED/FRIDA_VERSION := $NEW/"
+
+if sed --version 2>/dev/null | grep -q "GNU"; then
+    if ! sed -i "$PATTERN_TO_REPLACE" Makefile; then
+        echo "GNU sed command failed." >&2
+        mv Makefile.bak Makefile
+        echo "Restored Makefile from backup." >&2
+        exit 1
+    fi
+else
+    if ! sed -i '' "$PATTERN_TO_REPLACE" Makefile; then
+        echo "BSD sed command failed." >&2
+        mv Makefile.bak Makefile
+        echo "Restored Makefile from backup." >&2
+        exit 1
+    fi
+fi
+
+# Verify update
+if grep -q "FRIDA_VERSION := $NEW" Makefile; then
+    echo "Successfully updated Makefile from $OLD to $NEW"
+    rm Makefile.bak
+    echo "Removed backup Makefile.bak"
+else
+    echo "Update verification failed. Makefile content after attempted sed:" >&2
+    grep "^FRIDA_VERSION" Makefile || echo "FRIDA_VERSION line not found after sed." >&2
+    echo "Restoring backup..." >&2
+    mv Makefile.bak Makefile
+    exit 1
+fi
+
+exit 0
