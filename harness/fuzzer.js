@@ -153,9 +153,9 @@ export class Fuzzer {
             this.user_data = _user_data;
         }
 
-        for (let map in this.maps) {
-            if (this.maps[map].name != this.module) {
-                Stalker.exclude(this.maps[map]);
+        for (let map_idx in this.maps) {
+            if (this.maps[map_idx].name != this.module) {
+                Stalker.exclude(this.maps[map_idx]);
             } else {
                 this.debug_log(`[*] Not excluding ${this.module} from stalker`)
             }
@@ -368,7 +368,7 @@ export class Fuzzer {
         this.debug_log("[*] commap_id: " + commap_id);
         this.debug_log("[*] base: " + ptr(this.base));
         this.debug_log("[*] iteration_sem: " + this.iteration_sem);
-        this.debug_log("[*] exec_sem: " + this.iteration_sem);
+        this.debug_log("[*] exec_sem: " + this.exec_sem);
 
         // call the preparation function of the subclassed fuzzer
         this.prepare();
@@ -384,4 +384,3 @@ export class Fuzzer {
         }
     }
 }
-
