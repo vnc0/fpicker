@@ -8,11 +8,14 @@ class TestFuzzer extends Fuzzer {
         // object that can later be called by the fuzzer.
 
         // Usually you would use:
-        //     const proc_fn_addr = Module.getExportByName(null, "proc_fn");
+        //     const proc_fn_addr = Module.getGlobalExportByName("proc_fn");
         // However, there are cases where the symbol is not an export. We can still find it by enumerating
         // all symbols and filtering for the one we're looking for.
-        const proc_fn_addr = Module.enumerateSymbolsSync("test").filter(function(o) {return o.name == "proc_fn";})[0].address;
-        //const proc_fn_addr = Module.getExportByName(null, "proc_fn");
+
+        const proc_fn_addr = Process.getModuleByName("test")
+            ?.enumerateSymbols()
+            ?.filter(symbol => symbol.name === "proc_fn")[0]?.address;
+
         const proc_fn = new NativeFunction(
             proc_fn_addr,
             "void", ["pointer", "int64"], {

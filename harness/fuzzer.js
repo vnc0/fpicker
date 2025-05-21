@@ -26,7 +26,7 @@ export class Fuzzer {
         this.gc_counter = 0;
 
         this.maps = this._make_maps();
-        this.base = Module.getBaseAddress(this.module);
+        this.base = Process.getModuleByName(this.module).base;
 
         this.user_data = undefined;
 
@@ -60,7 +60,7 @@ export class Fuzzer {
 
     // add end address and a unique identifier to each map entry
     _make_maps() {
-        let maps = Process.enumerateModulesSync();
+        let maps = Process.enumerateModules();
         let i = 0;
         maps.map(function(o) { o.id = i++; });
         maps.map(function(o) { o.end = o.base.add(o.size); });
@@ -73,23 +73,23 @@ export class Fuzzer {
     }
 
     _function_setup() {
-        const open_addr = Module.getExportByName(null, "open");
-        const read_addr = Module.getExportByName(null, "read");
-        const close_addr = Module.getExportByName(null, "close");
-        const pthread_create_addr = Module.getExportByName(null, "pthread_create");
-        const pthread_join_addr = Module.getExportByName(null, "pthread_join");
+        const open_addr = Module.getGlobalExportByName("open");
+        const read_addr = Module.getGlobalExportByName("read");
+        const close_addr = Module.getGlobalExportByName("close");
+        const pthread_create_addr = Module.getGlobalExportByName("pthread_create");
+        const pthread_join_addr = Module.getGlobalExportByName("pthread_join");
 
         // TODO: if these cannot be resolved, throw error and suggest to load lpthread
         // or use send communication mode
-        const sem_post_addr = Module.getExportByName(null, "sem_post");
-        const sem_wait_addr = Module.getExportByName(null, "sem_wait");
-        const sem_open_addr = Module.getExportByName(null, "sem_open");
+        const sem_post_addr = Module.getGlobalExportByName("sem_post");
+        const sem_wait_addr = Module.getGlobalExportByName("sem_wait");
+        const sem_open_addr = Module.getGlobalExportByName("sem_open");
 
         if (this.platform == "darwin") {
             const darwin_shm_addr = this.darwin_shm.darwin_shm;
             this.darwin_shm = new NativeFunction(darwin_shm_addr, 'pointer', ['pointer', 'long']);
         } else {
-            const shmat_addr = Module.getExportByName(null, "shmat");
+            const shmat_addr = Module.getGlobalExportByName("shmat");
             this.shmat = new NativeFunction(shmat_addr, 'pointer', ['int', 'pointer', 'int']);
         }
 
@@ -237,7 +237,7 @@ export class Fuzzer {
     }
 
     _sem_open_with_type(type) {
-        const sem_prefix = Memory.readUtf8String(this.commap.add(16));
+        const sem_prefix = this.commap.add(16).readUtf8String();
         const sem_name = Memory.allocUtf8String(`${ sem_prefix }-${ type }`);
 
         return this.sem_open(sem_name, 0);
@@ -276,7 +276,7 @@ export class Fuzzer {
         this._afl_reset_prev_loc();
         if (this.communication_mode == "SEND") {
             const bytes = this.base64ToBytesArr(payload);
-            Memory.writeByteArray(this.payload_buffer, bytes);
+            this.payload_buffer.writeByteArray(bytes);
             return this.fuzz(this.payload_buffer, bytes.length);
         }
     }

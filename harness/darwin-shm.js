@@ -21,6 +21,6 @@ export const darwin_shm = new CModule(`
     return ptr;
   }
 `, {
-  "mmap": Module.getExportByName(null, "mmap"),
-  "shm_open": Module.getExportByName(null, "shm_open"),
+  "mmap": Module.getGlobalExportByName("mmap"),
+  "shm_open": Module.getGlobalExportByName("shm_open"),
 });
