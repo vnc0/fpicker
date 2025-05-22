@@ -451,8 +451,11 @@ FridaSession *spawn_or_attach(fuzzer_state_t *fstate) {
         fstate->target_pid = target_pid;
     }
 
-    // once we can use the newer Frida versions, the device_attach_sync call needs to look like this:
-    session = frida_device_attach_sync(device, target_pid, FRIDA_REALM_NATIVE, NULL, &error);
+    FridaSessionOptions *options = frida_session_options_new();
+    frida_session_options_set_realm(options, FRIDA_REALM_NATIVE);
+
+    session = frida_device_attach_sync(device, target_pid, options, NULL, &error);
+    g_object_unref(options);
     if (error != NULL) {
         plog("[!] Failed to attach to process %s on frida device %s (%s)\n", config->process_name, frida_device_get_name(device), error->message);
         g_error_free(error);
