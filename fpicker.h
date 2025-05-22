@@ -27,7 +27,7 @@
 #define STATE_FLAG_SENT 1
 #define STATE_FLAG_EXEC_FINISHED 2
 
-#define COVERAGE_BITMAP_SIZE 65535
+#define COVERAGE_BITMAP_SIZE (1 << 16) // 65536
 
 #define COMMAP_SIZE 0x2000
 #define SEM_NAME_PREFIX "/fpicker-sem"
