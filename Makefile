@@ -4,9 +4,8 @@
 MAKEFLAGS += --no-print-directory --silent
 
 # --- Configuration ---
-FRIDA_VERSION := 17.0.1
+FRIDA_VERSION := 17.0.7
 FRIDA_RELEASE_URL := https://github.com/frida/frida/releases/download/$(FRIDA_VERSION)
-
 
 # --- Host Environment Detection ---
 HOST_OS := $(shell uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/macos/')
