@@ -1,12 +1,12 @@
 .PHONY: default build clean help fpicker-macos fpicker-linux fpicker-ios libfrida-core.a frida-core.h prepare-frida
 
 .DEFAULT_GOAL := default
+MAKEFLAGS += --no-print-directory --silent
 
 # --- Configuration ---
 FRIDA_VERSION := 17.0.1
 FRIDA_RELEASE_URL := https://github.com/frida/frida/releases/download/$(FRIDA_VERSION)
 
-MAKEFLAGS += --no-print-directory --silent
 
 # --- Host Environment Detection ---
 HOST_OS := $(shell uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/macos/')
@@ -61,11 +61,12 @@ fpicker-ios:
 		TARGET_LDFLAGS="-arch $(ARCH)" \
 		TARGET_FRAMEWORKS="-framework Foundation -framework CoreGraphics -framework UIKit -framework IOKit -framework Security" \
 		fpicker-ios-$(ARCH)
+	@echo "Fakesigning fpicker-ios-$(ARCH)..."
+	ldid -S fpicker-ios-$(ARCH)
 
 # --- Build Rule ---
 fpicker-%-$(ARCH): $(SOURCES) 
 	@echo "Building $@..."
-	# Always clean up previous platform files to avoid mixing libraries
 	rm -f libfrida-core.a frida-core.h
 	$(MAKE) prepare-frida OS=$(OS) ARCH=$(ARCH)
 	$(CC) $(COMMON_CFLAGS) $(TARGET_CFLAGS) $(TARGET_FRAMEWORKS) \
