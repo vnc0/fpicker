@@ -9,28 +9,26 @@ frida-devkit-*
 
 # Node.js files
 node_modules
-package.json
 package-lock.json
 out/
-
-harness.js
+*.dist.js
 
 # Build artifacts
 *.dSYM
 fpicker-*
 
 # Example binaries and test files
-examples/test-network/test-network
-examples/test/test
-examples/protocol_example/protocol_example
-examples/test-network/in/*
-examples/test/in/*
-examples/protocol_example/in/*
+harness/examples/test-network/test-network
+harness/examples/test/test
+harness/examples/protocol_example/protocol_example
+harness/examples/test-network/in/*
+harness/examples/test/in/*
+harness/examples/protocol_example/in/*
 
 
 # Only explicitly add the two example corpus files
-!examples/test-network/in/0
-!examples/test-network/in/1
-!examples/test/in/0
-!examples/test/in/1
-!examples/protocol_example/in/1
+!harness/examples/test-network/in/0
+!harness/examples/test-network/in/1
+!harness/examples/test/in/0
+!harness/examples/test/in/1
+!harness/examples/protocol_example/in/1

@@ -1,5 +1,5 @@
 // Import the fuzzer base class
-import { Fuzzer } from "../../harness/fuzzer.js";
+import { Fuzzer } from "../../fuzzer.js";
 
 // The custom fuzzer needs to subclass the Fuzzer class to work properly
 class TestFuzzer extends Fuzzer {
