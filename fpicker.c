@@ -149,8 +149,7 @@ bool check_config(fuzzer_config_t *config) {
             return false;
         }
         if (config->fuzzer_mode == FUZZER_MODE_AFL) {
-            plog("[!] Fuzzer mode AFL not possible with remote device.\n");
-            return false;
+            plog("[!] Please note that AFL mode is not supported with remote devices.\n");
         }
     }
     if (config->standalone_mutator == STANDALONE_MUTATOR_CUSTOM && config->custom_mutator_cmd == NULL) {
