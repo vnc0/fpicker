@@ -1,0 +1,122 @@
+name: Build fpicker
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+jobs:
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential curl
+    
+    - name: Build fpicker for Linux
+      run: make fpicker-linux
+    
+    - name: Upload Linux binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: fpicker-linux-x86_64
+        path: fpicker-linux-*
+        retention-days: 30
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build fpicker for macOS
+      run: make fpicker-macos
+    
+    - name: Upload macOS binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: fpicker-macos-arm64
+        path: fpicker-macos-*
+        retention-days: 30
+
+  build-ios:
+    name: Build iOS
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install ldid for fakesigning
+      run: |
+        brew install ldid
+    
+    - name: Build fpicker for iOS
+      run: make fpicker-ios
+    
+    - name: Upload iOS binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: fpicker-ios-arm64
+        path: fpicker-ios-*
+        retention-days: 30
+
+  build-harness:
+    name: Build Harness Examples
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: harness/package.json
+    
+    - name: Install harness dependencies
+      working-directory: harness
+      run: npm ci
+    
+    - name: Build harness examples
+      working-directory: harness
+      run: npm run build
+    
+    - name: Upload compiled harnesses
+      uses: actions/upload-artifact@v4
+      with:
+        name: fpicker-harness-examples
+        path: |
+          harness/examples/*/test-*.dist.js
+          harness/examples/*/test-network-*.dist.js
+        retention-days: 30
+
+  release:
+    name: Create Release
+    if: github.event_name == 'release'
+    needs: [build-linux, build-macos, build-ios, build-harness]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+    
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          fpicker-linux-x86_64/*
+          fpicker-macos-arm64/*
+          fpicker-ios-arm64/*
+          fpicker-harness-examples/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
