@@ -9,7 +9,6 @@ frida-devkit-*
 
 # Node.js files
 node_modules
-package-lock.json
 out/
 *.dist.js
 
