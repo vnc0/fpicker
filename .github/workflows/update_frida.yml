@@ -1,0 +1,22 @@
+name: Update Frida Version
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  update_frida:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+      - name: Update Frida Version
+        run: ./update_frida_version.sh
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7.0.8
+        with:
+          commit-message: Update Frida version to latest
+          title: Update Frida version
+          body: This PR updates the Frida version in the Makefile to the latest release.
+          branch: update-frida-version
