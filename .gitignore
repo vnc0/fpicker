@@ -7,6 +7,11 @@ frida-core.h
 libfrida-core.a
 frida-devkit-*
 
+# Temporary files from Frida version update script
+.frida_old_version
+.frida_new_version
+.frida_version_changed
+
 # Node.js files
 node_modules
 out/

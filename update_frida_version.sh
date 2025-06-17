@@ -47,10 +47,17 @@ fi
 
 echo "Latest version: $NEW"
 
+# Write version information to files for GitHub workflow
+echo "$OLD" > .frida_old_version
+echo "$NEW" > .frida_new_version
+
 if [ "$OLD" = "$NEW" ]; then
     echo "Already up to date (version $OLD)."
+    echo "false" > .frida_version_changed
     exit 0
 fi
+
+echo "true" > .frida_version_changed
 
 OLD_ESCAPED=$(echo "$OLD" | sed 's/[.]/\\./g')
 
