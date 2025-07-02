@@ -4,7 +4,7 @@
 MAKEFLAGS += --no-print-directory --silent
 
 # --- Configuration ---
-FRIDA_VERSION := 17.2.4
+FRIDA_VERSION := 17.2.8
 FRIDA_RELEASE_URL := https://github.com/frida/frida/releases/download/$(FRIDA_VERSION)
 
 # --- Host Environment Detection ---
